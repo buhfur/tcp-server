@@ -8,11 +8,12 @@ from tcp import TCPPacket
 
 
 if __name__ == '__main__':
-    dst = '192.168.3.101'
-    
+    src = '192.168.3.101'
+    dst = '192.168.3.104'
+ 
     # Send SYN packet 
     syn_pak = TCPPacket(
-        '192.168.3.104',
+        src,
         20, # Source port 
         dst,
         65535, # Destination port 
