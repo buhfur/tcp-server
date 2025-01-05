@@ -1,15 +1,11 @@
 #!/usr/bin/env python3 
 
-# TCP client 
-
 # Original source code taken from source below :
 # https://www.kytta.dev/blog/tcp-packets-from-scratch-in-python-3/
 import socket 
 import struct 
 import random
 import array
-import pdb
-
 '''
 Connection estab 
 C->S : SYN , ISN generated and sent by client 
@@ -53,86 +49,75 @@ ACK :
 
 
 '''
-import struct 
-
-# Checksum : 16 bit ones complement of the ones complement sum of all 16 bit words in the header and text 
-def checksum(packet: bytes) -> int:
-    if len(packet) % 2 != 0: # 
+def chksum(packet: bytes) -> int:
+    if len(packet) % 2 != 0:
         packet += b'\0'
 
-    res = sum(array.array("H", packet)) # Sum of all 16bit words ? 
+    res = sum(array.array("H", packet))
     res = (res >> 16) + (res & 0xffff)
+    res += res >> 16
+
     return (~res) & 0xffff
 
 
 class TCPPacket:
     def __init__(self,
-                src_host: str,
-                src_port: int, 
-                dst_host: str,
-                dst_port: int,
-                flags: int = 0): 
-        self.src_host = src_host 
-        self.src_port = src_port 
+                 src_host:  str,
+                 src_port:  int,
+                 dst_host:  str,
+                 dst_port:  int,
+                 flags:     int = 0):
+        self.src_host = src_host
+        self.src_port = src_port
         self.dst_host = dst_host
         self.dst_port = dst_port
         self.flags = flags
 
-        # Pseudo header ? 
-    
-    # construct fields into byte sequence  
     def build(self) -> bytes:
-
         packet = struct.pack(
-            # ! = network byte order , H = unsigned short ( 2 bytes ) , L = unsigned long ( 4 bytes ) , B = Unsigned Char ( 1 byte ) , single byte flags
-            '!HHIIBBHHH', # Format string, defines binary structure, data types , byte order ( host / network )
-            self.src_port,     # Host source port , 16 bits, 2 bytes 
-            self.dst_port,     # Destination port,  16 bits, 2 bytes 
-            0,       # SEQ , increments with every SYN or FIN control bit set 
-            0,       # ACK , acknowledgement, 32 bits , 4 bytes 
-            5 << 4,    # Binary shift for offset 
-            self.flags,     # Control flags , FIN , SYN , PSH , RST , 6 bits [URG,ACK,PSH,RST,SYN,FIN]  <-- in this order of bits from left to right 
-            8192,      # Window size , sliding window , 
-            0,         # Checksum 
-            0,         # Urgent pointer 
+            '!HHIIBBHHH',
+            self.src_port,  # Source Port
+            self.dst_port,  # Destination Port
+            0,              # Sequence Number
+            0,              # Acknoledgement Number
+            5 << 4,         # Data Offset
+            self.flags,     # Flags
+            8192,           # Window
+            0,              # Checksum (initial value)
+            0               # Urgent pointer
         )
 
-        # Construct pseudo header 
         pseudo_hdr = struct.pack(
-                '!4s4sHH', # Format string : 4s = 4 char[] , H = unsigned short
-                socket.inet_aton(self.src_host), # Src address 
-                socket.inet_aton(self.dst_host), # destination address 
-                socket.IPPROTO_TCP,              # PTCL 
-                len(packet)                      # TCP length, includes length of data sent  
+            '!4s4sHH',
+            socket.inet_aton(self.src_host),    # Source Address
+            socket.inet_aton(self.dst_host),    # Destination Address
+            socket.IPPROTO_TCP,                 # PTCL
+            len(packet)                         # TCP Length
+        )
 
-                )
+        checksum = chksum(pseudo_hdr + packet)
 
-        # Compute checksum and add to packet 
-        csum = checksum(pseudo_hdr + packet)
-        packet = packet[:16] + struct.pack('H',csum) + packet[18:]
+        packet = packet[:16] + struct.pack('H', checksum) + packet[18:]
 
         return packet
 
 
-# SEND SYN  
-
 if __name__ == '__main__':
     dst = '192.168.3.101'
-    src_p = random.randint(1026,65535)
-    syn_pak = TCPPacket(
-            '192.168.3.104',                      # Source IP 
-            src_p,                           # Source Port 
-            dst,                                  # Destination IP 
-            80,                                    # Destination Port 
-            0b000000000010                        # Flags , SYN 
-            )
 
-    s = socket.socket(socket.AF_PACKET,socket.SOCK_RAW, socket.IPPROTO_TCP)
+    # Send SYN packet 
+    syn_pak = TCPPacket(
+        '192.168.3.104',
+        20, # Source port 
+        dst,
+        65535, # Destination port 
+        0b000000010  # Merry Christmas!
+    )
+
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
+
     s.sendto(syn_pak.build(), (dst, 0))
 
-# RECV SYN + ACK = SEQ + 1 
-
-# SEND ACK 
-
-
-
+    # TODO : write logic for receiving SYN+ACK reply 
+    

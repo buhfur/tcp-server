@@ -24,7 +24,7 @@ def recv_tcp_seg():
         ### RECEIVE IP PACKET ###
         raw_data, addr = recv_socket.recvfrom(65535) 
         # IP header is the first 20 bytes 
-        ip_header = raw_data[:20]
+        ep_header = raw_data[:20]
         ip_hdr = struct.unpack("!BBHHHBBH4s4s", ip_header)
         protocol = ip_hdr[6] # Protocol number 
         src_ip = socket.inet_ntoa(ip_hdr[8]) # Source IP 
