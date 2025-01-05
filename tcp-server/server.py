@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO)
 
 def recv_tcp_seg():
     rcv_sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
-    rcv_sock.bind(("0.0.0.0", 443)) # Listen on any interface 
+    rcv_sock.bind(("0.0.0.0", 0)) # Listen on any interface 
 
     while True:
 

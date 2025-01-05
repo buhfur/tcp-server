@@ -117,7 +117,7 @@ if __name__ == '__main__':
         20, # Source port 
         dst,
         65535, # Destination port 
-        0b000000010  # Merry Christmas!
+        0b000000010  # Send Syn
     )
 
 
