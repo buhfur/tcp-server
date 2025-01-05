@@ -8,6 +8,7 @@ import socket
 import struct 
 import random
 import array
+import pdb
 
 '''
 Connection estab 
@@ -117,11 +118,10 @@ class TCPPacket:
 
 if __name__ == '__main__':
     dst = '192.168.3.101'
-    #src_p = random.randint(1026,65535)
-    src_p = 1026 
+    src_p = random.randint(1026,65535)
     syn_pak = TCPPacket(
             '192.168.3.104',                      # Source IP 
-            rand_src_p,                           # Source Port 
+            src_p,                           # Source Port 
             dst,                                  # Destination IP 
             80,                                    # Destination Port 
             0b000000000010                        # Flags , SYN 
