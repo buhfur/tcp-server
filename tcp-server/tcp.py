@@ -84,8 +84,8 @@ class TCPPacket:
             '!HHIIBBHHH',
             self.src_port,  # Source Port
             self.dst_port,  # Destination Port
-            0,              # Sequence Number
-            0,              # Acknoledgement Number
+            random.randint(0,2**32),              # Sequence Number
+            random.randint(0,2**16),              # Acknoledgement Number
             5 << 4,         # Data Offset
             self.flags,     # Flags
             8192,           # Window
