@@ -1,0 +1,30 @@
+== Info:   Trying 50.104.85.108:80...
+== Info: Connected to 50.104.85.108 (50.104.85.108) port 80 (#0)
+=> Send header, 77 bytes (0x4d)
+0000: 47 45 54 20 2f 20 48 54 54 50 2f 31 2e 31 0d 0a GET / HTTP/1.1..
+0010: 48 6f 73 74 3a 20 35 30 2e 31 30 34 2e 38 35 2e Host: 50.104.85.
+0020: 31 30 38 0d 0a 55 73 65 72 2d 41 67 65 6e 74 3a 108..User-Agent:
+0030: 20 63 75 72 6c 2f 37 2e 37 36 2e 31 0d 0a 41 63  curl/7.76.1..Ac
+0040: 63 65 70 74 3a 20 2a 2f 2a 0d 0a 0d 0a          cept: */*....
+== Info: Mark bundle as not supporting multiuse
+<= Recv header, 20 bytes (0x14)
+0000: 48 54 54 50 2f 31 2e 31 20 33 30 32 20 46 6f 75 HTTP/1.1 302 Fou
+0010: 6e 64 0d 0a                                     nd..
+<= Recv header, 22 bytes (0x16)
+0000: 53 65 72 76 65 72 3a 20 6e 67 69 6e 78 2f 31 2e Server: nginx/1.
+0010: 32 37 2e 32 0d 0a                               27.2..
+<= Recv header, 37 bytes (0x25)
+0000: 44 61 74 65 3a 20 54 75 65 2c 20 33 31 20 44 65 Date: Tue, 31 De
+0010: 63 20 32 30 32 34 20 30 31 3a 33 32 3a 30 33 20 c 2024 01:32:03 
+0020: 47 4d 54 0d 0a                                  GMT..
+<= Recv header, 19 bytes (0x13)
+0000: 43 6f 6e 74 65 6e 74 2d 4c 65 6e 67 74 68 3a 20 Content-Length: 
+0010: 30 0d 0a                                        0..
+<= Recv header, 24 bytes (0x18)
+0000: 43 6f 6e 6e 65 63 74 69 6f 6e 3a 20 6b 65 65 70 Connection: keep
+0010: 2d 61 6c 69 76 65 0d 0a                         -alive..
+<= Recv header, 16 bytes (0x10)
+0000: 4c 6f 63 61 74 69 6f 6e 3a 20 77 65 62 2f 0d 0a Location: web/..
+<= Recv header, 2 bytes (0x2)
+0000: 0d 0a                                           ..
+== Info: Connection #0 to host 50.104.85.108 left intact
