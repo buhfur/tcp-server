@@ -79,13 +79,13 @@ class TCPPacket:
         self.flags = flags
 
     # TODO generate unique seq number 
-    def build(self) -> bytes:
+    def build(self,ack=0,seq=0) -> bytes:
         packet = struct.pack(
             '!HHIIBBHHH',
             self.src_port,  # Source Port
             self.dst_port,  # Destination Port
-            random.randint(0,2**32),              # Sequence Number
-            random.randint(0,2**16),              # Acknoledgement Number
+            seq,              # Sequence Number
+            ack,              # Acknoledgement Number
             5 << 4,         # Data Offset
             self.flags,     # Flags
             8192,           # Window
