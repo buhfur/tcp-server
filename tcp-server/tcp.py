@@ -28,6 +28,11 @@ ACK : 0x010
 SYN : 0x002
 PSH : 
 
+Handshake steps : 
+1. Client generates Initial Sequence  num , sends to server , Syn bit set
+2. Server responds with random generated Sequence num , Ack is set to ISN + 1 and sent to client. Syn and Ack bit set 
+3. Client sets Sequence num to value of ACK from server , ACK is set to Seuqence value from Server + 1. 
+4. Data is sent using same Sequence Number and ACK value from end of handshake 
 Control flag in binary : 
     1   2   3   4   5   6   7   8   9  10  11  12
     0   0   0   0   0   0   0   0   0   0   0   0
@@ -73,6 +78,7 @@ class TCPPacket:
         self.dst_port = dst_port
         self.flags = flags
 
+    # TODO generate unique seq number 
     def build(self) -> bytes:
         packet = struct.pack(
             '!HHIIBBHHH',
@@ -104,7 +110,7 @@ class TCPPacket:
 
 if __name__ == '__main__':
     dst = '192.168.3.101'
-
+    
     # Send SYN packet 
     syn_pak = TCPPacket(
         '192.168.3.104',
@@ -116,8 +122,5 @@ if __name__ == '__main__':
 
 
     s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
-
     s.sendto(syn_pak.build(), (dst, 0))
 
-    # TODO : write logic for receiving SYN+ACK reply 
-    

@@ -97,6 +97,7 @@ target_ip = "192.168.3.104"
 # Layer different protocols 
 #tcp_send = ether_send / IP(dst=f"{target_ip}") / TCP(dport=65535, flags="S")
 ans, unans = sr(IP(dst="192.168.3.101")/ TCP(dport=65535, flags="S"))
-ans.summary(lambda s,r : r.sprintf("%IP.src% is alive"))
+#ans.summary(lambda s,r : r.sprintf("%IP.src% is alive"))
+print(ans.summary())
 
 #tcp_res = sr1(tcp_send, timeout=5,verbose=False)
