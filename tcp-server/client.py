@@ -7,6 +7,7 @@
 import socket 
 import struct 
 import random
+import array
 
 '''
 Connection estab 
@@ -84,12 +85,12 @@ class TCPPacket:
         packet = struct.pack(
             # ! = network byte order , H = unsigned short ( 2 bytes ) , L = unsigned long ( 4 bytes ) , B = Unsigned Char ( 1 byte ) , single byte flags
             '!HHIIBBHHH', # Format string, defines binary structure, data types , byte order ( host / network )
-            src_p,     # Host source port , 16 bits, 2 bytes 
-            dst_p,     # Destination port,  16 bits, 2 bytes 
-            seq,       # SEQ , increments with every SYN or FIN control bit set 
-            ack,       # ACK , acknowledgement, 32 bits , 4 bytes 
+            self.src_port,     # Host source port , 16 bits, 2 bytes 
+            self.dst_port,     # Destination port,  16 bits, 2 bytes 
+            0,       # SEQ , increments with every SYN or FIN control bit set 
+            0,       # ACK , acknowledgement, 32 bits , 4 bytes 
             5 << 4,    # Binary shift for offset 
-            flags,     # Control flags , FIN , SYN , PSH , RST , 6 bits [URG,ACK,PSH,RST,SYN,FIN]  <-- in this order of bits from left to right 
+            self.flags,     # Control flags , FIN , SYN , PSH , RST , 6 bits [URG,ACK,PSH,RST,SYN,FIN]  <-- in this order of bits from left to right 
             8192,      # Window size , sliding window , 
             0,         # Checksum 
             0,         # Urgent pointer 
@@ -107,23 +108,27 @@ class TCPPacket:
 
         # Compute checksum and add to packet 
         csum = checksum(pseudo_hdr + packet)
-        packet = packet[:16] + struct.pack('H',checksum) + packet[18:]
+        packet = packet[:16] + struct.pack('H',csum) + packet[18:]
 
         return packet
 
 
 # SEND SYN  
 
-syn_pak = TCPPacket(
-        '192.168.3.104',                      # Source IP 
-        random.randint(1026,65535),           # Source Port 
-        '192.168.3.104',                      # Destination IP 
-        65535                                 # Destination Port 
-        )
+if __name__ == '__main__':
+    dst = '192.168.3.101'
+    #src_p = random.randint(1026,65535)
+    src_p = 1026 
+    syn_pak = TCPPacket(
+            '192.168.3.104',                      # Source IP 
+            rand_src_p,                           # Source Port 
+            dst,                                  # Destination IP 
+            80,                                    # Destination Port 
+            0b000000000010                        # Flags , SYN 
+            )
 
-dst = "192.168.3.104"
-s = socket.socket(socket.AF_PACKET,socket.SOCK_RAW, socket.IPPROTO_TCP)
-s.sendto(syn_pak.build(), (dst, 0))
+    s = socket.socket(socket.AF_PACKET,socket.SOCK_RAW, socket.IPPROTO_TCP)
+    s.sendto(syn_pak.build(), (dst, 0))
 
 # RECV SYN + ACK = SEQ + 1 
 
