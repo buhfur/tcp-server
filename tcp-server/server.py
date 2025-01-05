@@ -46,8 +46,6 @@ def recv_tcp_seg():
             # Check if TCP segment has SYN control bit  
             if src_ip  == "192.168.3.104" and tcp_control_flags == 2:
                 # TODO : Generate Seq num , set ACK to ISN + 1 received from client 
-                logging.info(f"[Server] Received SYN, sending SYN-ACK")
-                logging.info(f"[Server] Client ACK = {tcp_ack}")
                 # Generate SYN + ACK packet 
                 syn_ack_pak = TCPPacket(
                     dest_ip,
@@ -56,6 +54,9 @@ def recv_tcp_seg():
                     tcp_dst_port,
                     0b000010010
                 )
+                logging.info(f"[Server] Received SYN, sending SYN-ACK")
+                logging.info(f"[Server] Sending to {src_ip} from {dest_ip}")
+                logging.info(f"[Server] Client ACK = {tcp_ack}")
                 seq = random.randint(1,1000) # randomly gen seq num
                 ack = tcp_ack + 1 # ACK = ISN + 1 
                 rcv_sock.sendto(syn_ack_pak.build(ack=ack, seq=seq),(src_ip,0))
