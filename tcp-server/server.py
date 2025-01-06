@@ -21,6 +21,8 @@ def recv_tcp_seg():
     rcv_sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
     rcv_sock.bind(("0.0.0.0", 0)) # Listen on any interface 
 
+    server_ip = "192.168.3.104" 
+    client_ip = "192.168.3.101"
     while True:
 
         # TODO : send SYN+ACK 
@@ -44,26 +46,32 @@ def recv_tcp_seg():
             tcp_ack = tcp_hdr[3]
             tcp_control_flags = tcp_hdr[5]
             # Check if TCP segment has SYN control bit  
-            if src_ip  == "192.168.3.104" and tcp_control_flags == 2:
+            server_ack = 0
+            server_seq = 0
+            #### SEND SYN + ACK ####
+            if src_ip  == client_ip: 
                 # TODO : Generate Seq num , set ACK to ISN + 1 received from client 
-                # Generate SYN + ACK packet 
-                syn_ack_pak = TCPPacket(
-                    dest_ip,
-                    20,
-                    src_ip,
-                    tcp_dst_port,
-                    0b000010010
-                )
-                logging.info(f"[Server] Received SYN, sending SYN-ACK")
-                logging.info(f"[Server] Sending to {src_ip} from {dest_ip}")
-                logging.info(f"[Server] Client ACK = {tcp_ack}")
-                seq = random.randint(1,1000) # randomly gen seq num
-                ack = tcp_ack + 1 # ACK = ISN + 1 
-                rcv_sock.sendto(syn_ack_pak.build(ack=ack, seq=seq),(src_ip,0))
+                if tcp_control_flags == 2:
+                    syn_ack_pak = TCPPacket(
+                        dest_ip,
+                        20,
+                        src_ip,
+                        tcp_dst_port,
+                        0b000010010
+                    )
+                    logging.info(f"[Server] Received SYN, sending SYN-ACK")
+                    server_seq = random.randint(1,1000) # randomly gen seq num
+                    server_ack = tcp_ack + 1 # ACK = ISN + 1 
+                    rcv_sock.sendto(syn_ack_pak.build(ack=server_ack, seq=server_seq),(src_ip,0))
+                    logging.info(f"[Server] Sent SYN + ACK  to {src_ip} from {dest_ip}")
+                elif src_ip == client_ip and tcp_control_flags == 16 and tcp_ack == server_ack + 1 :
+                    # TODO : Send ACK 
+                    logging.info(f"[Server] Server ACK = {server_ack} SEQ = {server_seq}")
+                    logging.info(f"[Server] Received ACK from {src_ip}")
+
+            
 
 
-            if tcp_hdr[5] == 2:
-                logging.info(f"SYN packet detected : {tcp_hdr}\n{tcp_hdr[5]}")
 
 
 
