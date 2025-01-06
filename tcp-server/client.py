@@ -3,28 +3,32 @@
 import socket
 import struct 
 import array 
+import logging
 from tcp import TCPPacket
 
+# TODO : find out why i'm not receiving SYN+ACK 
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
-
-if __name__ == '__main__':
+def send_syn_segment():
     src = '192.168.3.101'
     dst = '192.168.3.104'
- 
     # Send SYN packet 
     syn_pak = TCPPacket(
         src,
         20, # Source port 
         dst,
         65535, # Destination port 
-        0b000000010  # Merry Christmas!
+        0b000000010  # Send SYN 
     )
-
-
     s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
     s.sendto(syn_pak.build(), (dst, 0))
-    s.bind(("0.0.0.0", 0))
+    logging.info(f"[Client] Sending SYN to {dst}")
 
+
+def receive_tcp_segment():
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
     while True:
 
         # TODO : send SYN+ACK 
@@ -44,9 +48,9 @@ if __name__ == '__main__':
             tcp_ack = tcp_hdr[3]
             tcp_seq = tcp_hdr[4]
             tcp_control_flags = tcp_hdr[5]
+            ### RECEIVE SYN+ACK ####
             if src_ip  == "192.168.3.101" and tcp_control_flags == 18:
-                logging.info(f"[Server] Received SYN, sending SYN-ACK")
-                logging.info(f"[Server] Client ACK = {tcp_ack}")
+                logging.info(f"[Client] Received SYN + ACK")
                 # ACK packet 
                 syn_ack_pak = TCPPacket(
                     dest_ip,
@@ -58,7 +62,9 @@ if __name__ == '__main__':
                 seq = tcp_ack  
                 ack = tcp_seq + 1 # ACK = SERVER_SEQ + 1 
                 s.sendto(syn_ack_pak.build(ack=ack, seq=seq),(dst,0))
-                logging.info(f"[Client] Received SYN + ACK, Sending ACK")
+                logging.info(f"[Client] Sending ACK")
 
 
-
+if __name__ == '__main__':
+    send_syn_segment()
+    receive_tcp_segment()
