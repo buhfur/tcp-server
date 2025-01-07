@@ -4,15 +4,33 @@ import socket
 import struct 
 import array 
 import logging
+import argparse
 from tcp import TCPPacket
 
-# TODO : find out why i'm not receiving SYN+ACK 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-def send_syn_segment():
-    src = '192.168.3.101'
-    dst = '192.168.3.104'
+# Make the functions craft the packets ? use them to make the TCPPackets then forward through sockets ? 
+
+#### TODO list ####
+# TODO : find out why i'm not receiving SYN+ACK 
+# TODO : add cli options to change host ip , dest ip , source port,  destination port 
+# TODO : send SYN+ACK 
+def send_SYN(src_ip: str,src_p: int,dst_ip: str,dst_p: int):
+    """
+    Creates a TCPPacket instance which builds the headers for a TCP SYN packet. Generates an ISN.
+
+    Args:
+        src_ip (str): IP address of the client
+        src_p (int): Client ephemeral port 
+        dst_ip (str): IP of the server, or receiving host
+        dst_p (str): Port the client will forward the request to. 
+
+    Returns:
+        packet(TCPPacket?)
+    """
+    src = '192.168.3.101' # TODO convert to CLI arg 
+    dst = '192.168.3.104' # TODO convert to CLI arg 
     # Send SYN packet 
     syn_pak = TCPPacket(
         src,
@@ -22,16 +40,27 @@ def send_syn_segment():
         0b000000010  # Send SYN 
     )
     s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
-    s.sendto(syn_pak.build(), (dst, 0))
+    s.sendto(syn_pak.build(), (dst, 0)) # Send the packet to server
     logging.info(f"[Client] Sending SYN to {dst}")
 
+ #def send_ACK()
+    #return 
 
-def receive_tcp_segment():
+# TODO : find out how to receive the SYN+ACK from the server 
+def receive(src_ip):
+    """
+    Receives the SYN+ACK TCP segment sent from server
+
+    Args: 
+        src_ip (str): IP address of the sender, AKA the server's IP address 
+
+    Returns:
+        Nothing so far...
+    """
 
     s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
     while True:
 
-        # TODO : send SYN+ACK 
         raw_data, addr = s.recvfrom(65535) 
         ip_header = raw_data[:20]
         ip_hdr = struct.unpack("!BBHHHBBH4s4s", ip_header)
@@ -66,5 +95,30 @@ def receive_tcp_segment():
 
 
 if __name__ == '__main__':
-    send_syn_segment()
-    receive_tcp_segment()
+    # Parse CLI arguements 
+    """
+    Arguments : 
+        -s, --source-ip (str): IP address of the client
+        -p, --source-port (int): Client ephemeral port 
+        -D, --dest-ip (str): IP of the server, or receiving host
+        -P, --dest-port (int): Port the client will forward the request to. 
+
+    """
+    parser = argparse.ArgumentParser(description='Client 3-way Handshake implementation')
+    parser.add_argument('-s', '--source-ip', type=str,help='IP address of the client',required=True)
+    parser.add_argument('-p', '--source-port', type=int,help='Client ephemeral port ') # Source port can be randomly picked 
+    parser.add_argument('-D', '--dest-ip', type=str,help='IP of the server, or receiving host')
+    parser.add_argument('-P', '--dest-port', type=int,help='Port the client will forward the request to. ',required=True)
+    
+    # Variables defined from argparsing 
+    args = parser.parse_args()
+    src_ip = args.source_ip
+    src_port = 20 if not args.source_port else args.source_port
+    dest_ip = args.dest_ip
+    dest_port = args.dest_port
+    
+
+
+    #send_syn_segment()
+    #receive_syn_ack()
+    #send_ack()

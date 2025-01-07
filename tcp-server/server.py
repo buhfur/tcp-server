@@ -8,14 +8,17 @@
 import socket 
 import struct 
 import logging 
+import argparse
 import random
 from tcp import TCPPacket
 
-# TODO: Only handle the tcp handshake process, respond with ACK + SYN 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-#recv_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW,socket.IPPROTO_TCP)
+#### TODO LIST ####  
+# TODO: Only handle the tcp handshake process, respond with ACK + SYN 
+# TODO : add cli options to change host ip , dest ip , source port,  destination port 
+ 
 
 def recv_tcp_seg():
     rcv_sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
@@ -79,4 +82,18 @@ def recv_tcp_seg():
 
 
 if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(description='Server 3-way Handshake implementation')
+    parser.add_argument('-s', '--source-ip', type=str,help='IP address of the server',required=True)
+    parser.add_argument('-p', '--source-port', type=int,help='Client ephemeral port ') # Source port can be randomly picked 
+    parser.add_argument('-D', '--dest-ip', type=str,help='IP of the server, or receiving host')
+    parser.add_argument('-P', '--dest-port', type=int,help='Port the client will forward the request to. ',required=True)
+    
+    # Variables defined from argparsing 
+    args = parser.parse_args()
+    src_ip = args.source_ip
+    src_port = 20 if not args.source_port else args.source_port
+    dest_ip = args.dest_ip
+    dest_port = args.dest_port
+    print(f"src_port: {src_port}")
     recv_tcp_seg()
