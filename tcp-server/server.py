@@ -85,7 +85,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Server 3-way Handshake implementation')
     parser.add_argument('-s', '--source-ip', type=str,help='IP address of the server',required=True)
-    parser.add_argument('-p', '--source-port', type=int,help='Client ephemeral port ') # Source port can be randomly picked 
+    parser.add_argument('-p', '--source-port', type=int,help='Client ephemeral port ') # Default is port 20 
     parser.add_argument('-D', '--dest-ip', type=str,help='IP of the server, or receiving host')
     parser.add_argument('-P', '--dest-port', type=int,help='Port the client will forward the request to. ',required=True)
     

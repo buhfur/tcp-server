@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 # TODO : find out why i'm not receiving SYN+ACK 
 # TODO : add cli options to change host ip , dest ip , source port,  destination port 
 # TODO : send SYN+ACK 
-def send_SYN(src_ip: str,src_p: int,dst_ip: str,dst_p: int):
+def syn_pak(src_ip: str,src_p: int,dst_ip: str,dst_p: int) -> TCPPacket:
     """
     Creates a TCPPacket instance which builds the headers for a TCP SYN packet. Generates an ISN.
 
@@ -27,27 +27,27 @@ def send_SYN(src_ip: str,src_p: int,dst_ip: str,dst_p: int):
         dst_p (str): Port the client will forward the request to. 
 
     Returns:
-        packet(TCPPacket?)
+        syn_pak (TCPPacket): Instance of TCPPacket with header structure generated, ready for snd
     """
-    src = '192.168.3.101' # TODO convert to CLI arg 
-    dst = '192.168.3.104' # TODO convert to CLI arg 
     # Send SYN packet 
     syn_pak = TCPPacket(
-        src,
-        20, # Source port 
-        dst,
-        65535, # Destination port 
+        src_ip,
+        src_p, # Source port 
+        dst_ip,
+        dst_p, # Destination port 
         0b000000010  # Send SYN 
     )
-    s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
-    s.sendto(syn_pak.build(), (dst, 0)) # Send the packet to server
+    #s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
+    #s.sendto(syn_pak.build(), (dst, 0)) # Send the packet to server
+
     logging.info(f"[Client] Sending SYN to {dst}")
+    return syn_pak
 
  #def send_ACK()
     #return 
 
-# TODO : find out how to receive the SYN+ACK from the server 
-def receive(src_ip):
+# Receives ACK from recv() function 
+def recv_ack(src_ip: str):
     """
     Receives the SYN+ACK TCP segment sent from server
 
@@ -93,6 +93,12 @@ def receive(src_ip):
                 s.sendto(syn_ack_pak.build(ack=ack, seq=seq),(dst,0))
                 logging.info(f"[Client] Sending ACK")
 
+# Function responsible for sending formed packets 
+def send_pak():
+    return 
+# Function that is responsible for all sendto() statments 
+def recv_pak():
+    return 
 
 if __name__ == '__main__':
     # Parse CLI arguements 
