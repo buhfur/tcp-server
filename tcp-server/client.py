@@ -1,7 +1,11 @@
 #!/usr/bin/env python3 
 
 import socket
+import time
+import queue 
 import struct 
+import sys
+import threading 
 import array 
 import logging
 import argparse
@@ -10,120 +14,148 @@ from tcp import TCPPacket
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-# Make the functions craft the packets ? use them to make the TCPPackets then forward through sockets ? 
 
 #### TODO list ####
 # TODO : find out why i'm not receiving SYN+ACK 
 # TODO : add cli options to change host ip , dest ip , source port,  destination port 
 # TODO : send SYN+ACK 
-def syn_pak(src_ip: str,src_p: int,dst_ip: str,dst_p: int) -> TCPPacket:
+
+# NOTE: server and client use port 65535 for destination port , source port is 20 
+# NOTE: Base code was generated using GPT to assist with re-write 
+
+handshake_queue = queue.Queue()
+
+def init_socket() -> socket.socket:
     """
-    Creates a TCPPacket instance which builds the headers for a TCP SYN packet. Generates an ISN.
+    Creates the initial socket used for sending and receiving data 
 
     Args:
-        src_ip (str): IP address of the client
-        src_p (int): Client ephemeral port 
-        dst_ip (str): IP of the server, or receiving host
-        dst_p (str): Port the client will forward the request to. 
+        None
+    Returns:
+        s (socket.scoket): Socket object 
+    """
+    try: 
+        s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
+        return s
+    except PermissionError:
+        print("[ERROR] Could not create socket, root priveleges are required")
+        sys.exit(1)
+    except Exception as e:
+        print(f"socket creation failed : {e}")
+        sys.exit(1)
+
+
+# Client sends SYN packet 
+def snd_pak(handshake_queue: queue.Queue, sock: socket.socket, packet: TCPPacket,  target_ip:str, interval=5):
+    """
+    Sends packets based on an interval through a raw socket, takes TCPPacket, socket , str as arguemnt 
+
+    Args:
+        sock (socket.socket): Socket object initialized through init_socket()
+        packet (TCPPacket): Manually formed tcp packet to be sent , not limited to specific cflags
+        target_ip (str): IP address of the receiving host 
+        interval (int): default interval , determines rate packets are sent
 
     Returns:
-        syn_pak (TCPPacket): Instance of TCPPacket with header structure generated, ready for snd
+        None
     """
-    # Send SYN packet 
-    syn_pak = TCPPacket(
-        src_ip,
-        src_p, # Source port 
-        dst_ip,
-        dst_p, # Destination port 
-        0b000000010  # Send SYN 
-    )
-    #s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
-    #s.sendto(syn_pak.build(), (dst, 0)) # Send the packet to server
+    ### GENERATE TCP PACKET HERE ###
+    
 
-    logging.info(f"[Client] Sending SYN to {dst}")
-    return syn_pak
-
- #def send_ACK()
-    #return 
-# Receives ACK from recv() function 
-def recv_syn_ack(src_ip: str):
-    """
-    Receives the SYN+ACK TCP segment sent from server
-
-    Args: 
-        src_ip (str): IP address of the sender, AKA the server's IP address 
-
-    Returns:
-        Nothing so far...
-    """
-
-    s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
     while True:
+        try:
+            sock.sendto(packet, (target_ip, 65535))
+            print(f"[Client] Sending SYN packet to {target_ip}")
 
-        raw_data, addr = s.recvfrom(65535) 
-        ip_header = raw_data[:20]
-        ip_hdr = struct.unpack("!BBHHHBBH4s4s", ip_header)
-        protocol = ip_hdr[6] # Protocol number 
-        src_ip = socket.inet_ntoa(ip_hdr[8]) # Source IP 
-        dest_ip = socket.inet_ntoa(ip_hdr[9]) # Destination IP 
+        except Exception as e: 
+            print(f"[ERROR] Failed to send packet : {e}")
 
-        if protocol == socket.IPPROTO_TCP:
-            ### RECEIVE TCP SEGEMENT ### 
-            tcp_header = raw_data[20:40] 
-            tcp_hdr = struct.unpack("!HHLLBBHHH", tcp_header) 
-            tcp_dst_port = tcp_hdr[0]
-            tcp_src_port = tcp_hdr[1]
-            tcp_ack = tcp_hdr[3]
-            tcp_seq = tcp_hdr[4]
-            tcp_control_flags = tcp_hdr[5]
-            ### RECEIVE SYN+ACK ####
-            if src_ip  == "192.168.3.101" and tcp_control_flags == 18:
-                logging.info(f"[Client] Received SYN + ACK")
-                # ACK packet 
-                syn_ack_pak = TCPPacket(
-                    dest_ip,
-                    20,
-                    src_ip,
-                    tcp_dst_port,
-                    0b000010010 # TODO : change to ACk 
-                )
-                seq = tcp_ack  
-                ack = tcp_seq + 1 # ACK = SERVER_SEQ + 1 
-                s.sendto(syn_ack_pak.build(ack=ack, seq=seq),(dst,0))
-                logging.info(f"[Client] Sending ACK")
+        time.sleep(interval)
 
-# Function responsible for sending formed packets 
-def send_pak():
-    return 
-# Function that is responsible for all sendto() statments 
-def recv_pak():
-    return 
+def recv_pak(sock: socket.socket, server_ip:str):
+    """
+    Receives packets from raw socket returned by init_socket()
 
+    Args:
+        sock (socket.socket): Socket object initialized through init_socket()
+        packet (TCPPacket): Manually formed tcp packet to be sent , not limited to specific cflags
+        server_ip (str): IP address of the host who sent the packet 
+
+    Returns:
+        None
+    """
+
+    while True:
+        try:
+            data, addr = sock.recvfrom(65535)
+            # Disect IP header 
+            ip_header = data[:20]
+            ip_hdr = struct.unpack("!BBHHHBBH4s4s", )
+            sender_ip = socket.inet_ntoa(ip_hdr[8]) # IP of the sender, should be the server's IP 
+            # Disect TCP segment and verify if SYN + ACK 
+            tcp_header = data[20:40] # Grab TCP segement 
+            tcp_hdr = struct.unpack("!HHLLBBHHH", tcp_header)
+            # Check if SYN + ACK was from server IP 
+            if sender_ip == server_ip : 
+                if tcp_hdr[5] == 16:
+                    print(f"[Client] Received SYN+ACK from {server_ip}")
+                    # TODO: Construct TCPPacket with ACK 
+                    #ack_pak = TCPPacket()
+
+                elif tcp_hdr[5] == 
+
+def main(source_ip: str,source_port: int, target_ip: str, target_port: int):
+
+    # TODO: Construct first SYN packet here
+    syn_pak = TCPPacket(source_ip,
+                        source_port,
+                        target_ip,
+                        target_port,
+                        0b000000010
+                        )
+
+    init_sock = init_socket()
+
+    # Threading for send/recv 
+    send_thread = threading.Thread(target=snd_pak, args=(handshake_queue,init_sock, syn_pak, target_ip), daemon=True)
+    recv_thread = threading.Thread(target=send_packets, args=(handshake_queue,init_sock, target_ip), daemon=True)
+
+    # Start both threads 
+    send_thread.start()
+    recv_thread.start()
+
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("[Client] Keyboard interrupt detected. Closing socket")
+    finally:
+        init_sock.close()
+        print("[Client] Closed socket successfully")
+
+            
 if __name__ == '__main__':
     # Parse CLI arguements 
     """
-    Arguments : 
+    Arguments( Optional ) : 
         -s, --source-ip (str): IP address of the client
-        -p, --source-port (int): Client ephemeral port 
         -D, --dest-ip (str): IP of the server, or receiving host
         -P, --dest-port (int): Port the client will forward the request to. 
 
     """
     parser = argparse.ArgumentParser(description='Client 3-way Handshake implementation')
-    parser.add_argument('-s', '--source-ip', type=str,help='IP address of the client',required=True)
+    parser.add_argument('-s', '--source-ip', type=str,help='IP address of the client')
     parser.add_argument('-p', '--source-port', type=int,help='Client ephemeral port ') # Source port can be randomly picked 
     parser.add_argument('-D', '--dest-ip', type=str,help='IP of the server, or receiving host')
-    parser.add_argument('-P', '--dest-port', type=int,help='Port the client will forward the request to. ',required=True)
+    parser.add_argument('-P', '--dest-port', type=int,help='Port the client will forward the request to. ')
     
     # Variables defined from argparsing 
     args = parser.parse_args()
-    src_ip = args.source_ip
-    src_port = 20 if not args.source_port else args.source_port
-    dest_ip = args.dest_ip
-    dest_port = args.dest_port
+    src_ip = "192.168.3.104" if not args.source_ip else args.source_ip
+    src_port = 20 if not args.source_port else args.source_port # Sets default source port to 20 
+    dest_ip = "192.168.3.101" if not args.dest_ip else args.dest_ip 
+    dest_port = 65535 if not args.dest_port else args.dest_port
     
+    main(src_ip, src_port, dest_ip, dest_port)
 
 
-    #send_syn_segment()
-    #receive_syn_ack()
-    #send_ack()

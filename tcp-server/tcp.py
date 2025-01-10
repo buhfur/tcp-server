@@ -107,21 +107,21 @@ class TCPPacket:
 
         return packet
 
+syn_pak = TCPPacket(
+    '192.168.3.104',
+    20, # Source port 
+    '192.168.1.1',
+    65535, # Destination port 
+    0b000000010  # Send Syn
+)
 
-if __name__ == '__main__':
-    dst = '192.168.3.101'
+print(type(syn_pak))
+#if __name__ == '__main__':
+#    dst = '192.168.3.101'
     
     # Send SYN packet 
-    syn_pak = TCPPacket(
-        '192.168.3.104',
-        20, # Source port 
-        dst,
-        65535, # Destination port 
-        0b000000010  # Send Syn
-    )
 
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
-    logging.info(f"socket type : {type(s)}")
-    s.sendto(syn_pak.build(), (dst, 0))
+#    s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
+#    s.sendto(syn_pak.build(), (dst, 0))
 
