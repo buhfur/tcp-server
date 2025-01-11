@@ -55,6 +55,8 @@ def snd_pak(sock: socket.socket, packet: TCPPacket = None,interval=5,handshake_q
     
     while True:
         try:
+            if handshake_queue.empty():
+                logging.info("Waiting for SYN packet")
             if handshake_queue.get_nowait() == 2:  # Send SYN + ACK 
                 ISN_s = random.randint(1,1000) # Generate random sequence number for seq  
                 syn_ack_pak = packet
