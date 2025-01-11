@@ -18,6 +18,9 @@ logging.basicConfig(level=logging.INFO)
 
 #### TODO list ####
 
+
+# TODO : read/write packets from the queue rather than the individual control flags 
+
 handshake_queue = queue.Queue()
 
 def init_socket() -> socket.socket:
@@ -121,8 +124,8 @@ def main(source_ip: str,source_port: int, target_ip: str, target_port: int):
     send_thread = threading.Thread(target=snd_pak, args=(init_sock,), daemon=True)
 
     # Start both threads 
-    recv_thread.start()
     send_thread.start()
+    recv_thread.start()
 
     try:
         while True:

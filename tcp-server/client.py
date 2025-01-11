@@ -17,12 +17,8 @@ logging.basicConfig(level=logging.INFO)
 
 
 #### TODO list ####
-# TODO : find out why i'm not receiving SYN+ACK 
-# TODO : add cli options to change host ip , dest ip , source port,  destination port 
-# TODO : send SYN+ACK 
 
-# NOTE: server and client use port 65535 for destination port , source port is 20 
-# NOTE: Base code was generated using GPT to assist with re-write 
+# TODO : read/write packets from the queue rather than the individual control flags 
 
 handshake_queue = queue.Queue()
 
