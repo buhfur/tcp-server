@@ -67,6 +67,7 @@ def snd_pak(sock: socket.socket, packet: TCPPacket = None,interval=5,handshake_q
 
 
         except Exception as e: 
+            print(e)
             logging.info(f"[ERROR] Failed to send packet : {e}")
 
         time.sleep(interval)
