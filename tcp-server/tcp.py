@@ -71,8 +71,8 @@ class TCPPacket:
                  src_port:  int,
                  dst_host:  str,
                  dst_port:  int,
-                 seq: int,
-                 ack: int,
+                 seq: int = 0, # Default values for seq and ack 
+                 ack: int = 0,
                  flags:     int = 0):
         self.src_host = src_host
         self.src_port = src_port
@@ -82,7 +82,9 @@ class TCPPacket:
         self.ack = ack 
         self.flags = flags
 
-    # TODO generate unique seq number 
+    """
+    Function that converts a TCPPacket instance into a byte string ready for transmission
+    """
     def build(self) -> bytes:
         packet = struct.pack(
             '!HHIIBBHHH',
@@ -111,7 +113,15 @@ class TCPPacket:
 
         return packet
 
-    # Function that accepts a byte object and returns it as an instance of TCPPacket()
+    """
+    Conveinience function that takes a byte object as input and returns an instance of the TCPPacket class
+
+    Args:
+        packet (bytes) : byte object received from socket
+
+    Returns:
+        TCPPacket()
+    """
     @staticmethod 
     def build_pak(packet: bytes):
         ip_header = packet[:20]
@@ -124,8 +134,8 @@ class TCPPacket:
 
             tcp_header = packet[20:40] 
             tcp_hdr = struct.unpack("!HHLLBBHHH", tcp_header) 
-            # Change instance attributes 
 
+            # Return TCPPacket instance 
             return TCPPacket( 
                     src_ip,
                     tcp_hdr[1],

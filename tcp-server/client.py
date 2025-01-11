@@ -1,5 +1,5 @@
 #!/usr/bin/env python3 
-
+# TCP handshake client 
 import socket
 import time
 import queue 
@@ -9,6 +9,7 @@ import threading
 import array 
 import logging
 import argparse
+import random
 from tcp import TCPPacket
 
 logger = logging.getLogger(__name__)
@@ -36,6 +37,7 @@ def init_socket() -> socket.socket:
     """
     try: 
         s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
+        logging.info(f"[Client] Created socket successfully\n")
         return s
     except PermissionError:
         logging.info("[ERROR] Could not create socket, root priveleges are required")
@@ -44,36 +46,43 @@ def init_socket() -> socket.socket:
         logging.info(f"socket creation failed : {e}")
         sys.exit(1)
 
-
-# Client sends SYN packet 
-def snd_pak(handshake_queue: queue.Queue, sock: socket.socket, packet: TCPPacket,  target_ip:str, interval=5):
+def snd_pak(sock: socket.socket, packet: TCPPacket,interval=5,handshake_queue=handshake_queue):
     """
     Sends packets based on an interval through a raw socket, takes TCPPacket, socket , str as arguemnt 
 
     Args:
+        handshake_queue (queue.Queue): Shared object which tracks state of the handshake
         sock (socket.socket): Socket object initialized through init_socket()
         packet (TCPPacket): TCPPacket instance, ISN is generated and passed to TCPPacket.build(seq=ISN)
-        target_ip (str): IP address of the receiving host 
         interval (int): default interval , determines rate packets are sent
 
     Returns:
         None
     """
-    ### GENERATE TCP PACKET HERE ###
     
-
     while True:
         try:
             if handshake_queue.empty():  # If queue is empty , SYN has not been sent
-                # Send SYN 
-                # TODO: Generate random sequence number for seq  
-                ISN = random.randint(1,1000)
-                sock.sendto(packet.build(seq=ISN), (target_ip, 65535)) # Set SEQ to ISN
-                logging.info(f"[Client] Sending SYN packet to {target_ip}")
+                ISN_c = random.randint(1,1000) # Generate random sequence number for seq  
+                syn_packet = packet
+                syn_packet.seq = ISN_c # Set sequence number to ISN
+                sock.sendto(syn_packet.build(), (syn_packet.dst_host, syn_packet.dst_port)) # Send SYN  
+                logging.info(f"[Client] Sending SYN packet to {syn_packet.dst_host}")
                 handshake_queue.put(2) # Adds control flag to queue to signal first step in handshake 
-            elif handshake_queue.get() == 18:
-                # Send ACK 
-                # TODO : get ACK and SEQ from TCPPacket()   
+
+            elif handshake_queue.get() == 18: # Send ACK in response to SYN+ACK
+                ACK = packet.seq + 1 # Increments the sequence number and assigns to ACK 
+                SEQ = packet.ack + 1  # Sequence number is the value of the ACK received
+                ack_pak = packet
+                ack_pak.ack = ACK
+                ack_pak.seq = SEQ
+                ack_pak.flags = 0b000010000 # Set ACK for control flags
+                sock.sendto(ack_pak.build(), (ack_pak.src_host, ack_pak.dst_port)) # Sends ACK packet to server
+                logging.info(f"[Client] Sending ACK to server")
+                handshake_queue.put(ack_pak.flags)
+
+            elif handshake_queue.get() == 16: # Start data transfer after server receives ACK 
+                logging.info(f"[Client] handshake complete !")
 
 
         except Exception as e: 
@@ -81,7 +90,7 @@ def snd_pak(handshake_queue: queue.Queue, sock: socket.socket, packet: TCPPacket
 
         time.sleep(interval)
 
-def recv_pak(sock: socket.socket, server_ip:str):
+def recv_pak(sock: socket.socket, server_ip:str,handshake_queue=handshake_queue):
     """
     Receives packets from raw socket returned by init_socket()
 
@@ -96,44 +105,28 @@ def recv_pak(sock: socket.socket, server_ip:str):
     while True:
         try:
             data, addr = sock.recvfrom(65535)
-            # Disect IP header 
-            ip_header = data[:20]
-            ip_hdr = struct.unpack("!BBHHHBBH4s4s", ip_header)
-            sender_ip = socket.inet_ntoa(ip_hdr[8]) # IP of the sender, should be the server's IP 
-            # Disect TCP segment and verify if SYN + ACK 
-            tcp_header = data[20:40] # Grab TCP segement 
-            tcp_hdr = struct.unpack("!HHLLBBHHH", tcp_header)
-            # Check if SYN + ACK was from server IP 
-            if sender_ip == server_ip : 
-                # Conditional should be based on result retrieved from queue 
-                if tcp_hdr[5] == 18:
-                    logging.info(f"[Client] Received SYN+ACK from {server_ip}")
-                    # Add SYN+ACK packet to shared queue 
-                    handshake_queue.put(tcp_hdr[5])
-                    # Disect IP packet and use for values 
-                    #ack_pak = TCPPacket()
-
-                elif tcp_hdr[5] == 16: 
+            packet = TCPPacket.build_pak(data) # Convert byte string into TCPPacket instance 
+            if packet.src_host == server_ip : # Check if SYN + ACK was from server IP 
+                if packet.flags == 18: # Checks if packet has SYN+ACK control flag
+                    logging.info(f"[Client] Received SYN+ACK from {server_ip}\n")
+                    handshake_queue.put(packet.flags) # Add SYN+ACK flag to shared queue 
+                    logging.info(f"[QUEUE] Current queue : {handshake_queue.get()}\n")
+                    send_pak(sock, packet) # Send packet to send function to send ACK
                     
-                    logging.info(f"[Client] Received ACK from {sender_ip}")
+        except Exception as e:
+            print(f'[ERROR]: {e}')
 
 def main(source_ip: str,source_port: int, target_ip: str, target_port: int):
-
-    # TODO: Construct first SYN packet here
-    syn_pak = TCPPacket(source_ip,
+    syn_pak = TCPPacket(source_ip, 
                         source_port,
                         target_ip,
                         target_port,
-                        0b000000010
+                        0b000000010 # SYN control flag 
                         )
 
-    init_sock = init_socket()
-
-    # Threading for send/recv 
-    send_thread = threading.Thread(target=snd_pak, args=(handshake_queue,init_sock, syn_pak, target_ip), daemon=True)
-    recv_thread = threading.Thread(target=send_packets, args=(handshake_queue,init_sock, target_ip), daemon=True)
-
-    # Start both threads 
+    init_sock = init_socket() # initialize socket to send / recv on 
+    send_thread = threading.Thread(target=snd_pak, args=(init_sock, syn_pak), daemon=True)
+    recv_thread = threading.Thread(target=recv_pak, args=(init_sock, target_ip), daemon=True)
     send_thread.start()
     recv_thread.start()
 

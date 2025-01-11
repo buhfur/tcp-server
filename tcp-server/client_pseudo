@@ -1,0 +1,30 @@
+# Client pseudo code 
+
+q = {}  # Queue data structure 
+send(packet) 
+    if q.empty():  # Send SYN 
+        SEQ = ISN_c = rand() 
+        sendto(syn-packet)
+        q.put(2)
+
+    elif q.get() == 18: # Send ACK in response to SYN+ACK
+        ack_pak = packet
+        ack_pak.seq = packet.ack + 1 # Set SEQ to ISN_c + 1  
+        ack_pak.ack = packet.seq + 1 # Set ACK to ISN_s + 1  
+        ack_pak.flags = 0b000010000 # Set control flag to ACK
+        sendto(ack-packet.build(TCPPacket().build(seq=SEQ, ack=ACK)) ) # Send ACK 
+        q.put(16)
+
+    elif q.get() == 16: # Start data transfer after ACK has been sent 
+        print('[Client] Sending data to server')
+
+recv():
+    data, addr = recvfrom() 
+    packet = TCPPacket.build_pak()
+    
+    if tcp_control[5] == 18: # Recv SYN+ACK
+        q.put(18)
+        # Convert received byte object into TCPPacket() 
+        send(packet=packet)
+
+    
