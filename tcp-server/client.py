@@ -68,9 +68,9 @@ def snd_pak(sock: socket.socket, packet: TCPPacket,interval=5,handshake_queue=ha
                 syn_packet.seq = ISN_c # Set sequence number to ISN
                 sock.sendto(syn_packet.build(), (syn_packet.dst_host, syn_packet.dst_port)) # Send SYN  
                 logging.info(f"[Client] Sending SYN packet to {syn_packet.dst_host}")
-                handshake_queue.put(2) # Adds control flag to queue to signal first step in handshake 
+                handshake_queue.put_nowait(2) # Adds control flag to queue to signal first step in handshake 
 
-            elif handshake_queue.get() == 18: # Send ACK in response to SYN+ACK
+            elif handshake_queue.get_nowait() == 18: # Send ACK in response to SYN+ACK
                 ACK = packet.seq + 1 # Increments the sequence number and assigns to ACK 
                 SEQ = packet.ack + 1  # Sequence number is the value of the ACK received
                 ack_pak = packet
@@ -79,9 +79,9 @@ def snd_pak(sock: socket.socket, packet: TCPPacket,interval=5,handshake_queue=ha
                 ack_pak.flags = 0b000010000 # Set ACK for control flags
                 sock.sendto(ack_pak.build(), (ack_pak.src_host, ack_pak.dst_port)) # Sends ACK packet to server
                 logging.info(f"[Client] Sending ACK to server")
-                handshake_queue.put(ack_pak.flags)
+                handshake_queue.put_nowait(ack_pak.flags)
 
-            elif handshake_queue.get() == 16: # Start data transfer after server receives ACK 
+            elif handshake_queue.get_nowait() == 16: # Start data transfer after server receives ACK 
                 logging.info(f"[Client] handshake complete !")
 
 
@@ -109,7 +109,7 @@ def recv_pak(sock: socket.socket, server_ip:str,handshake_queue=handshake_queue)
             if packet.src_host == server_ip : # Check if SYN + ACK was from server IP 
                 if packet.flags == 18: # Checks if packet has SYN+ACK control flag
                     logging.info(f"[Client] Received SYN+ACK from {server_ip}\n")
-                    handshake_queue.put(packet.flags) # Add SYN+ACK flag to shared queue 
+                    handshake_queue.put_nowait(packet.flags) # Add SYN+ACK flag to shared queue 
                     logging.info(f"[QUEUE] Current queue : {handshake_queue.get()}\n")
                     send_pak(sock, packet) # Send packet to send function to send ACK
                     

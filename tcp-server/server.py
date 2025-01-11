@@ -55,7 +55,7 @@ def snd_pak(sock: socket.socket, packet: TCPPacket = None,interval=5,handshake_q
     
     while True:
         try:
-            if handshake_queue.get() == 2:  # Send SYN + ACK 
+            if handshake_queue.get_nowait()() == 2:  # Send SYN + ACK 
                 ISN_s = random.randint(1,1000) # Generate random sequence number for seq  
                 syn_ack_pak = packet
                 syn_ack_pak.seq = ISN_s # Set sequence number to ISN
@@ -63,7 +63,7 @@ def snd_pak(sock: socket.socket, packet: TCPPacket = None,interval=5,handshake_q
                 syn_ack_pak.flags = 0b000010010 # Set control flag to SYN + ACK 
                 sock.sendto(syn_packet.build(), (syn_ack_packet.src_host, syn_ack_packet.dst_port)) # Send SYN+ACK packet 
                 logging.info(f"[Server] Sending SYN+ACK packet to {syn_packet.src_host}")
-                handshake_queue.put(syn_ack_pak.flags) # Adds control flag to queue to signal SYN+ACK has been sent
+                handshake_queue.put_nowait(syn_ack_pak.flags) # Adds control flag to queue to signal SYN+ACK has been sent
 
 
         except Exception as e: 
@@ -94,15 +94,15 @@ def recv_pak(sock: socket.socket, client_ip: str, handshake_queue=handshake_queu
                 if packet.flags == 2:
                     logging.info(f"[Server] Received SYN from {client_ip}\n")
                     # Add SYN+ACK flag to shared queue 
-                    handshake_queue.put(packet.flags)
-                    logging.info(f"[QUEUE] Current queue : {handshake_queue.get()}\n")
+                    handshake_queue.put_nowait(packet.flags)
+                    logging.info(f"[QUEUE] Current queue : {handshake_queue.get_nowait()()}\n")
                     # Send packet to send function to send ACK
-                    handshake_queue.put(2)
+                    handshake_queue.put_nowait(2)
                     send_pak(sock, packet=packet)
 
                 elif packet.flags == 16: 
                     logging.info(f"[Server] Received ACK from {packet.src_host}\n")
-                    handshake_queue.put(16)
+                    handshake_queue.put_nowait(16)
 
                     #send_pak(sock,packet=packet)
 
