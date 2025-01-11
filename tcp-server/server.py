@@ -89,6 +89,7 @@ def recv_pak(sock: socket.socket, client_ip: str, handshake_queue=handshake_queu
             # Disect IP header 
             packet = TCPPacket.build_pak(data)
             # Check if SYN + ACK was from server IP 
+            logging.info(f"[Server] src_host = {packet.src_host}\nclient_ip = {client_ip}")
             if packet.src_host == client_ip : 
                 # Checks if packet has SYN control flag
                 if packet.flags == 2:
