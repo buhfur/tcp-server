@@ -100,7 +100,7 @@ def recv_pak(sock: socket.socket, client_ip: str, handshake_queue=handshake_queu
                     handshake_queue.put(2)
                     send_pak(sock, packet=packet)
 
-                elif tcp_hdr[5] == 16: 
+                elif packet.flags == 16: 
                     logging.info(f"[Server] Received ACK from {packet.src_host}\n")
                     handshake_queue.put(16)
 
