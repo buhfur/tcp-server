@@ -38,10 +38,10 @@ def init_socket() -> socket.socket:
         s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
         return s
     except PermissionError:
-        print("[ERROR] Could not create socket, root priveleges are required")
+        logging.info("[ERROR] Could not create socket, root priveleges are required")
         sys.exit(1)
     except Exception as e:
-        print(f"socket creation failed : {e}")
+        logging.info(f"socket creation failed : {e}")
         sys.exit(1)
 
 
@@ -52,7 +52,7 @@ def snd_pak(handshake_queue: queue.Queue, sock: socket.socket, packet: TCPPacket
 
     Args:
         sock (socket.socket): Socket object initialized through init_socket()
-        packet (TCPPacket): Manually formed tcp packet to be sent , not limited to specific cflags
+        packet (TCPPacket): TCPPacket instance, ISN is generated and passed to TCPPacket.build(seq=ISN)
         target_ip (str): IP address of the receiving host 
         interval (int): default interval , determines rate packets are sent
 
@@ -64,11 +64,20 @@ def snd_pak(handshake_queue: queue.Queue, sock: socket.socket, packet: TCPPacket
 
     while True:
         try:
-            sock.sendto(packet, (target_ip, 65535))
-            print(f"[Client] Sending SYN packet to {target_ip}")
+            if handshake_queue.empty():  # If queue is empty , SYN has not been sent
+                # Send SYN 
+                # TODO: Generate random sequence number for seq  
+                ISN = random.randint(1,1000)
+                sock.sendto(packet.build(seq=ISN), (target_ip, 65535)) # Set SEQ to ISN
+                logging.info(f"[Client] Sending SYN packet to {target_ip}")
+                handshake_queue.put(2) # Adds control flag to queue to signal first step in handshake 
+            elif handshake_queue.get() == 18:
+                # Send ACK 
+                # TODO : get ACK and SEQ from TCPPacket()   
+
 
         except Exception as e: 
-            print(f"[ERROR] Failed to send packet : {e}")
+            logging.info(f"[ERROR] Failed to send packet : {e}")
 
         time.sleep(interval)
 
@@ -78,7 +87,6 @@ def recv_pak(sock: socket.socket, server_ip:str):
 
     Args:
         sock (socket.socket): Socket object initialized through init_socket()
-        packet (TCPPacket): Manually formed tcp packet to be sent , not limited to specific cflags
         server_ip (str): IP address of the host who sent the packet 
 
     Returns:
@@ -90,19 +98,24 @@ def recv_pak(sock: socket.socket, server_ip:str):
             data, addr = sock.recvfrom(65535)
             # Disect IP header 
             ip_header = data[:20]
-            ip_hdr = struct.unpack("!BBHHHBBH4s4s", )
+            ip_hdr = struct.unpack("!BBHHHBBH4s4s", ip_header)
             sender_ip = socket.inet_ntoa(ip_hdr[8]) # IP of the sender, should be the server's IP 
             # Disect TCP segment and verify if SYN + ACK 
             tcp_header = data[20:40] # Grab TCP segement 
             tcp_hdr = struct.unpack("!HHLLBBHHH", tcp_header)
             # Check if SYN + ACK was from server IP 
             if sender_ip == server_ip : 
-                if tcp_hdr[5] == 16:
-                    print(f"[Client] Received SYN+ACK from {server_ip}")
-                    # TODO: Construct TCPPacket with ACK 
+                # Conditional should be based on result retrieved from queue 
+                if tcp_hdr[5] == 18:
+                    logging.info(f"[Client] Received SYN+ACK from {server_ip}")
+                    # Add SYN+ACK packet to shared queue 
+                    handshake_queue.put(tcp_hdr[5])
+                    # Disect IP packet and use for values 
                     #ack_pak = TCPPacket()
 
-                elif tcp_hdr[5] == 
+                elif tcp_hdr[5] == 16: 
+                    
+                    logging.info(f"[Client] Received ACK from {sender_ip}")
 
 def main(source_ip: str,source_port: int, target_ip: str, target_port: int):
 
@@ -128,10 +141,10 @@ def main(source_ip: str,source_port: int, target_ip: str, target_port: int):
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        print("[Client] Keyboard interrupt detected. Closing socket")
+        logging.info("[Client] Keyboard interrupt detected. Closing socket")
     finally:
         init_sock.close()
-        print("[Client] Closed socket successfully")
+        logging.info("[Client] Closed socket successfully")
 
             
 if __name__ == '__main__':
@@ -155,6 +168,7 @@ if __name__ == '__main__':
     src_port = 20 if not args.source_port else args.source_port # Sets default source port to 20 
     dest_ip = "192.168.3.101" if not args.dest_ip else args.dest_ip 
     dest_port = 65535 if not args.dest_port else args.dest_port
+    
     
     main(src_ip, src_port, dest_ip, dest_port)
 

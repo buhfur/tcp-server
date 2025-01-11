@@ -64,6 +64,8 @@ def snd_pak(sock: socket.socket, packet: TCPPacket,  target_ip:str, interval=5):
 
     while True:
         try:
+            # Conditional based on queue , change seq & ack in packet as necessary 
+            
             sock.sendto(packet, (target_ip, 65535))
             print(f"[Server] Sending SYN packet to {target_ip}")
 
@@ -90,7 +92,7 @@ def recv_pak(sock: socket.socket, client_ip:str):
             data, addr = sock.recvfrom(65535)
             # Disect IP header 
             ip_header = data[:20]
-            ip_hdr = struct.unpack("!BBHHHBBH4s4s", )
+            ip_hdr = struct.unpack("!BBHHHBBH4s4s", ip_header)
             sender_ip = socket.inet_ntoa(ip_hdr[8]) # IP of the sender, should be the server's IP 
             # Disect TCP segment and verify if SYN + ACK 
             tcp_header = data[20:40] # Grab TCP segement 
@@ -117,7 +119,7 @@ def main(source_ip: str,source_port: int, target_ip: str, target_port: int):
     init_sock = init_socket()
 
     # Threading for send/recv 
-    send_thread = threading.Thread(target=snd_pak, args=(init_sock, syn_pak, target_ip), daemon=True)
+    send_thread = threading.Thread(target=snd_pak, args=(init_sock, syn_pak.build(), target_ip), daemon=True)
     recv_thread = threading.Thread(target=send_packets, args=(init_sock, target_ip), daemon=True)
 
     # Start both threads 

@@ -71,21 +71,25 @@ class TCPPacket:
                  src_port:  int,
                  dst_host:  str,
                  dst_port:  int,
+                 seq: int,
+                 ack: int,
                  flags:     int = 0):
         self.src_host = src_host
         self.src_port = src_port
         self.dst_host = dst_host
         self.dst_port = dst_port
+        self.seq = seq
+        self.ack = ack 
         self.flags = flags
 
     # TODO generate unique seq number 
-    def build(self,ack=0,seq=0) -> bytes:
+    def build(self) -> bytes:
         packet = struct.pack(
             '!HHIIBBHHH',
             self.src_port,  # Source Port
             self.dst_port,  # Destination Port
-            seq,              # Sequence Number
-            ack,              # Acknoledgement Number
+            self.seq,              # Sequence Number
+            self.ack,              # Acknoledgement Number
             5 << 4,         # Data Offset
             self.flags,     # Flags
             8192,           # Window
@@ -107,21 +111,40 @@ class TCPPacket:
 
         return packet
 
-syn_pak = TCPPacket(
-    '192.168.3.104',
-    20, # Source port 
-    '192.168.1.1',
-    65535, # Destination port 
-    0b000000010  # Send Syn
-)
+    # Function that accepts a byte object and returns it as an instance of TCPPacket()
+    @staticmethod 
+    def build_pak(packet: bytes):
+        ip_header = packet[:20]
+        ip_hdr = struct.unpack("!BBHHHBBH4s4s", ip_header)
+        protocol = ip_hdr[6] # Protocol number 
+        src_ip = socket.inet_ntoa(ip_hdr[8]) # Source IP 
+        dest_ip = socket.inet_ntoa(ip_hdr[9]) # Destination IP 
 
-print(type(syn_pak))
-#if __name__ == '__main__':
-#    dst = '192.168.3.101'
+        if protocol == socket.IPPROTO_TCP:
+
+            tcp_header = packet[20:40] 
+            tcp_hdr = struct.unpack("!HHLLBBHHH", tcp_header) 
+            # Change instance attributes 
+
+            return TCPPacket( 
+                    src_ip,
+                    tcp_hdr[1],
+                    dest_ip,
+                    tcp_hdr[0],
+                    tcp_hdr[4],
+                    tcp_hdr[3],
+                    tcp_hdr[5]
+            )
+
+
+if __name__ == '__main__':
+   
+    # Testing purposes 
+    s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
+    while True:
+        data, addr = s.recvfrom(65535)
+        packet = TCPPacket.build_pak(data)
+        print(f"[Source IP] : {packet.src_host}\n[Source Port]: {packet.src_port}\n[Destination IP]: {packet.dst_host}\n[Destination Port]: {packet.dst_port}\n[Sequence Number]: {packet.seq}\n[Acknowledgement]: {packet.ack}\n[Flags]: {packet.flags}\n\n")
+        
+        
     
-    # Send SYN packet 
-
-
-#    s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
-#    s.sendto(syn_pak.build(), (dst, 0))
-
