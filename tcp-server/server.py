@@ -81,7 +81,7 @@ def snd_pak(sock: socket.socket, handshake_queue: queue.Queue, interval=5):
             print(e)
             logging.exception(f"[ERROR] Failed to send packet : {e}")
 
-        #time.sleep(interval)
+        time.sleep(interval)
 
 def recv_pak(sock: socket.socket, handshake_queue: queue.Queue, client_ip: str):
     """
