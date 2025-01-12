@@ -157,7 +157,7 @@ class TCPPacket:
     """
 
     def get_pak(self) -> str:
-        packet_info = f"[Source IP] : {self.src_host}\n[Source Port]: {self.src_port}\n[Destination IP]: {self.dst_host}\n[Destination Port]: {self.dst_port}\n[Sequence Number]: {self.seq}\n[Acknowledgement]: {self.ack}\n[Flags]: {self.flags}\n\n"
+        packet_info = f"\n\t[Source IP] : {self.src_host}\n\t[Source Port]: {self.src_port}\n\t[Destination IP]: {self.dst_host}\n\t[Destination Port]: {self.dst_port}\n\t[Sequence Number]: {self.seq}\n\t[Acknowledgement]: {self.ack}\n\t[Flags]: {self.flags}\n\n"
         return packet_info
 
 
