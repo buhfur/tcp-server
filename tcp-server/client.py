@@ -79,6 +79,7 @@ def snd_pak(sock: socket.socket, handshake_queue: queue.Queue, source_ip: str,
             except queue.Empty:
                 # Send SYN packet
                 ISN_c = random.randint(1, 1000) # Generate Client Sequence number 
+                logging.info(f"ISN_c : {ISN_c}")
                 syn_pak = TCPPacket(source_ip,
                                     source_port,
                                     target_ip,
