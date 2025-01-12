@@ -146,6 +146,20 @@ class TCPPacket:
                     tcp_hdr[5]
             )
 
+    """
+    Conveinience function that prints out headers of TCP segment , useful for debugging
+
+    Arguments:
+        None
+
+    Returns:
+        packet_info (str): Formatted string of TCP segments headers 
+    """
+
+    def get_pak(self) -> str:
+        packet_info = f"[Source IP] : {self.src_host}\n[Source Port]: {self.src_port}\n[Destination IP]: {self.dst_host}\n[Destination Port]: {self.dst_port}\n[Sequence Number]: {self.seq}\n[Acknowledgement]: {self.ack}\n[Flags]: {self.flags}\n\n"
+        return packet_info
+
 
 if __name__ == '__main__':
    
@@ -154,7 +168,8 @@ if __name__ == '__main__':
     while True:
         data, addr = s.recvfrom(65535)
         packet = TCPPacket.build_pak(data)
-        print(f"[Source IP] : {packet.src_host}\n[Source Port]: {packet.src_port}\n[Destination IP]: {packet.dst_host}\n[Destination Port]: {packet.dst_port}\n[Sequence Number]: {packet.seq}\n[Acknowledgement]: {packet.ack}\n[Flags]: {packet.flags}\n\n")
+        print(packet.get_pak()) 
+        #print(f"[Source IP] : {packet.src_host}\n[Source Port]: {packet.src_port}\n[Destination IP]: {packet.dst_host}\n[Destination Port]: {packet.dst_port}\n[Sequence Number]: {packet.seq}\n[Acknowledgement]: {packet.ack}\n[Flags]: {packet.flags}\n\n")
         
         
     
