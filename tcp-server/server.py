@@ -71,7 +71,7 @@ def snd_pak(sock: socket.socket, handshake_queue: queue.Queue, interval=5):
                     syn_ack_pak.src_port = packet.dst_port
                     syn_ack_pak.dst_port = packet.src_port
                     syn_ack_pak.seq = ISN_s # Set sequence number to ISN
-                    syn_ack_pak.ack = syn_ack_pak.seq + 1  # Increment ISN(c) and set as ACK 
+                    syn_ack_pak.ack = packet.seq + 1  # Increment ISN(c) and set as ACK 
                     syn_ack_pak.flags = 0b000010010 # Set control flag to SYN + ACK 
                     sock.sendto(syn_ack_pak.build(), (syn_ack_pak.src_host, syn_ack_pak.dst_port)) # Send SYN+ACK packet 
                     logging.info(f"[Server] Sending SYN+ACK packet to {syn_ack_pak.src_host}\n\t{syn_ack_pak.get_pak()}")
