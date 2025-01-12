@@ -141,7 +141,7 @@ class TCPPacket:
                     tcp_hdr[1],
                     dest_ip,
                     tcp_hdr[0],
-                    tcp_hdr[4],
+                    tcp_hdr[2],
                     tcp_hdr[3],
                     tcp_hdr[5]
             )
