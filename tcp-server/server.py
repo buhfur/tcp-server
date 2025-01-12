@@ -33,6 +33,8 @@ def init_socket() -> socket.socket:
     """
     try: 
         s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
+        s.bind(("192.168.3.101",65535))
+
         return s
     except PermissionError:
         logging.info("[ERROR] Could not create socket, root priveleges are required")
