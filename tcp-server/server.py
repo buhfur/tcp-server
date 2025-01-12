@@ -100,6 +100,7 @@ def recv_pak(sock: socket.socket, handshake_queue: queue.Queue, client_ip: str):
             data, addr = sock.recvfrom(65535)
             # Disect IP header 
             packet = TCPPacket.build_pak(data) # Convert raw byte stream into TCPPacket() instance
+            logging.info(f"[Server] packet destination host:\n{packet.dst_host}\nclient_ip:\n{client_ip}")
             if packet.dst_host == client_ip : 
                 logging.info(f"Received packet from {client_ip}:\n{packet.get_pak()}")
                 handshake_queue.put_nowait(packet)
