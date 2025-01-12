@@ -127,7 +127,7 @@ def recv_pak(sock: socket.socket, handshake_queue: queue.Queue,
             if packet.src_host == server_ip:  # Check if SYN + ACK was from server IP
                 logging.info(
                     f"[Client] Adding Received packet from {server_ip} to queue\nPacket info:\n\t{packet.get_pak()}\n")
-                handshake_queue.put(packet)  # Add packet to queue
+                handshake_queue.put_nowait(packet)  # Add packet to queue
 
         except Exception as e:
             print(f'[ERROR]: {e}\n')
