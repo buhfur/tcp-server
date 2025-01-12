@@ -66,6 +66,8 @@ def snd_pak(sock: socket.socket, handshake_queue: queue.Queue, interval=5):
                     logging.info(f"[Server] Received SYN packet from client:\n\t{packet.get_pak()}\n")
                     ISN_s = random.randint(1,1000) # Generate random sequence number for seq  
                     syn_ack_pak = packet
+                    syn_ack_pak.src_ip = packet.dst_ip 
+                    syn_ack_pak.dst_ip = packet.src_ip 
                     syn_ack_pak.src_port = packet.dst_port
                     syn_ack_pak.dst_port = packet.src_port
                     syn_ack_pak.seq = ISN_s # Set sequence number to ISN
