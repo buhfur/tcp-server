@@ -126,7 +126,7 @@ def recv_pak(sock: socket.socket, handshake_queue: queue.Queue,
             # Convert byte string into TCPPacket instance
             packet = TCPPacket.build_pak(data)
             if packet.src_host == server_ip:  # Check if SYN + ACK was from server IP
-                if packet.flags == 18: # Check if SYN+ACK was received
+                if packet.flags == 18 and packet.dst_port == 65535: # Check if SYN+ACK was received
                     logging.info(
                         f"[Client] Adding SYN+ACK packet from {server_ip} to queue\nPacket info:\n\t{packet.get_pak()}\n")
                     handshake_queue.put_nowait(packet)  # Add packet to queue

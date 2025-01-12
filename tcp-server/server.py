@@ -60,9 +60,8 @@ def snd_pak(sock: socket.socket, handshake_queue: queue.Queue, interval=5):
 
             try:
                 packet = handshake_queue.get_nowait() # Get SYN packet from queue 
-                logging.info(f"[Server] Received SYN packet from client:\n\t{packet.get_pak()}\n")
-
-                if packet.flags == 2:  # Send SYN + ACK 
+                if packet.flags == 2 and packet.dst_port == 65535:  # Send SYN + ACK 
+                    logging.info(f"[Server] Received SYN packet from client:\n\t{packet.get_pak()}\n")
                     ISN_s = random.randint(1,1000) # Generate random sequence number for seq  
                     syn_ack_pak = packet
                     syn_ack_pak.seq = ISN_s # Set sequence number to ISN
@@ -71,7 +70,7 @@ def snd_pak(sock: socket.socket, handshake_queue: queue.Queue, interval=5):
                     sock.sendto(syn_ack_pak.build(), (syn_ack_pak.src_host, syn_ack_pak.dst_port)) # Send SYN+ACK packet 
                     logging.info(f"[Server] Sending SYN+ACK packet to {syn_packet.src_host}\n\t{syn_ack_pak.get_pak()}")
 
-                elif packet.flags == 16:
+                elif packet.flags == 16 and packet.dst_port == 65535:
                     logging.info("[Server] ACK recevied from client:\n\t{packet.get_pak()}")
         
             except queue.Empty:
@@ -101,7 +100,7 @@ def recv_pak(sock: socket.socket, handshake_queue: queue.Queue, client_ip: str):
             # Disect IP header 
             packet = TCPPacket.build_pak(data) # Convert raw byte stream into TCPPacket() instance
             #logging.info(f"[Server]\npacket destination host:\n{packet.dst_host}\nclient_ip:\n{client_ip}")
-            if packet.src_host == client_ip: 
+            if packet.src_host == client_ip and packet.dst_port == 65535: 
                 logging.info(f"Received packet from {client_ip}:\n{packet.get_pak()}")
                 handshake_queue.put_nowait(packet)
 
