@@ -65,7 +65,7 @@ def snd_pak(sock: socket.socket, handshake_queue: queue.Queue, interval=5):
                 if packet.flags == 2:  # Send SYN + ACK 
                     logging.info(f"[Server] Received SYN packet from client:\n\t{packet.get_pak()}\n")
                     ISN_s = random.randint(1,1000) # Generate random sequence number for seq  
-                    syn_ack_pak = TCPPacket( syn_ack_pak.src_host,
+                    syn_ack_pak = TCPPacket(
                             packet.dst_host,
                             packet.dst_port,
                             packet.src_host,
