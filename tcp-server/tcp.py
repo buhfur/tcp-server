@@ -71,9 +71,9 @@ class TCPPacket:
                  src_port:  int,
                  dst_host:  str,
                  dst_port:  int,
-                 seq: int = 0, # Default values for seq and ack 
-                 ack: int = 0,
-                 flags:     int = 0):
+                 seq: int, # Default values for seq and ack 
+                 ack: int,
+                 flags: int):
         self.src_host = src_host
         self.src_port = src_port
         self.dst_host = dst_host

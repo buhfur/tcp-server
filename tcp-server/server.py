@@ -113,8 +113,8 @@ def main(source_ip: str,source_port: int, target_ip: str, target_port: int):
     init_sock = init_socket() # initialize socket to send / recv on 
 
     # Threading for send/recv 
-    recv_thread = threading.Thread(target=recv_pak, args=(init_sock,handshake_queue, target_ip), daemon=True)
     send_thread = threading.Thread(target=snd_pak, args=(init_sock,handshake_queue), daemon=True)
+    recv_thread = threading.Thread(target=recv_pak, args=(init_sock,handshake_queue, target_ip), daemon=True)
 
     # Start both threads 
     send_thread.start()

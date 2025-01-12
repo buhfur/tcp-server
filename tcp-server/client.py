@@ -78,15 +78,16 @@ def snd_pak(sock: socket.socket, handshake_queue: queue.Queue, source_ip: str,
                     logging.info(f"[Client] handshake complete !")
             except queue.Empty:
                 # Send SYN packet
+                ISN_c = random.randint(1, 1000) # Generate Client Sequence number 
                 syn_pak = TCPPacket(source_ip,
                                     source_port,
                                     target_ip,
                                     target_port,
+                                    ISN_c,
+                                    0,
                                     0b000000010  # SYN control flag
                                     )
                 # Generate random sequence number for seq
-                ISN_c = random.randint(1, 1000)
-                syn_pak.seq = ISN_c  # Set sequence number to ISN
                 # Get headers of packet being sent to server
                 logging.info(
                     f"[Client] SYN Packet headers:\n\t{syn_pak.get_pak()}\n")
