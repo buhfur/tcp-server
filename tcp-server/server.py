@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO)
 # TODO : read/write packets from the queue rather than the individual control flags 
 
 
-def init_socket() -> socket.socket:
+def init_socket(src_ip: str, src_port: int ) -> socket.socket:
     """
     Creates the initial socket used for sending and receiving data 
 
@@ -33,6 +33,7 @@ def init_socket() -> socket.socket:
     """
     try: 
         s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
+        s.bind((src_ip,src_port))
 
         return s
     except PermissionError:
@@ -114,7 +115,7 @@ def recv_pak(sock: socket.socket, handshake_queue: queue.Queue, client_ip: str):
 def main(source_ip: str,source_port: int, target_ip: str, target_port: int):
 
     handshake_queue = queue.Queue()
-    init_sock = init_socket() # initialize socket to send / recv on 
+    init_sock = init_socket(source_ip, source_port) # initialize socket to send / recv on 
 
     # Threading for send/recv 
     send_thread = threading.Thread(target=snd_pak, args=(init_sock,handshake_queue), daemon=True)
